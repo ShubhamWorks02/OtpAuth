@@ -14,18 +14,18 @@ public class MySMSBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (SmsRetriever.SMS_RETRIEVED_ACTION.equals(intent.getAction())) {
-            Bundle extras = intent.getExtras();
-            Status status = (Status) extras.get(SmsRetriever.EXTRA_STATUS);
-
-            switch (status.getStatusCode()) {
-                case CommonStatusCodes.SUCCESS:
-                    String message = (String) extras.get(SmsRetriever.EXTRA_SMS_MESSAGE);
-                    // Extract one-time code from the message
-                    break;
-                case CommonStatusCodes.TIMEOUT:
-                    // Waiting for SMS timed out (5 minutes)
-                    break;
-            }
+//            Bundle extras = intent.getExtras();
+//            Status status = (Status) extras.get(SmsRetriever.EXTRA_STATUS);
+//
+//            switch (status.getStatusCode()) {
+//                case CommonStatusCodes.SUCCESS:
+//                    String message = (String) extras.get(SmsRetriever.EXTRA_SMS_MESSAGE);
+//                    // Extract one-time code from the message
+//                    break;
+//                case CommonStatusCodes.TIMEOUT:
+//                    // Waiting for SMS timed out (5 minutes)
+//                    break;
+//            }
         }
     }
 }
