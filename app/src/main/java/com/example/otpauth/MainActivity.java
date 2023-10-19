@@ -1,17 +1,13 @@
 package com.example.otpauth;
 
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-import android.Manifest;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -19,8 +15,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.auth.api.phone.SmsRetriever;
 import com.google.android.gms.auth.api.phone.SmsRetrieverClient;
@@ -76,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
 //                        try {
 //                            // Start activity to show consent dialog to user, activity must be started in
 //                            // 5 minutes, otherwise you'll receive another TIMEOUT intent
-                           requestActivityLauncher.launch(consentIntent);
+                        // requestActivityLauncher.launch(consentIntent);
 //                        } catch (ActivityNotFoundException e) {
 //                            // Handle the exception ...
 //                        }
@@ -88,43 +82,46 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 //        IntentFilter intentFilter = new IntentFilter();
 //        intentFilter.addAction(SmsRetriever.SMS_RETRIEVED_ACTION);
 //        getApplicationContext().registerReceiver(new MySMSBroadcastReceiver(), intentFilter);
         // registerReceiver(new SMSBroadcastReceiver(), new IntentFilter("android.provider.Telephony.SMS_DELIVER"));
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-            // Permission not granted, request it.
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_SMS},  3);
-        } else {
-            // Permission is already granted, continue with your logic.
-            // You can start listening for SMS or initiate the SMS retrieval process.
-        }
+//        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
+//            // Permission not granted, request it.
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_SMS},  3);
+//        } else {
+//            // Permission is already granted, continue with your logic.
+//            // You can start listening for SMS or initiate the SMS retrieval process.
+//        }
         mAuth = FirebaseAuth.getInstance();
         btnLogin = findViewById(R.id.btnLogin);
-        IntentFilter intentFilter = new IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION);
-        getApplicationContext().registerReceiver(smsVerificationReceiver, intentFilter);
+
+//        IntentFilter intentFilter = new IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION);
+//        getApplicationContext().registerReceiver(smsVerificationReceiver, intentFilter);
         // Task<Void> task = SmsRetriever.getClient(this).startSmsUserConsent(null);
-        Task<Void> task = SmsRetriever.getClient(MainActivity.this).startSmsUserConsent(null);
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(MainActivity.this, "SmsRetriever Failed", Toast.LENGTH_SHORT).show();
-            }
-        });
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void unused) {
-                Toast.makeText(MainActivity.this, "SmsRetriever success", Toast.LENGTH_SHORT).show();
-            }
-        });
+//        Task<Void> task = SmsRetriever.getClient(MainActivity.this).startSmsUserConsent(null);
+//        task.addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                Toast.makeText(MainActivity.this, "SmsRetriever Failed", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+//            @Override
+//            public void onSuccess(Void unused) {
+//                Toast.makeText(MainActivity.this, "SmsRetriever success", Toast.LENGTH_SHORT).show();
+//            }
+//        });
         // startSMSListener();
         PhoneAuthOptions options =
                 PhoneAuthOptions.newBuilder(mAuth)
-                        .setPhoneNumber("+919510324299")       // Phone number to verify
+                        .setPhoneNumber("+919724362449")       // Phone number to verify
                         .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
                         .setActivity(this)                 // (optional) Activity for callback binding
                         .setCallbacks(new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
@@ -145,6 +142,8 @@ public class MainActivity extends AppCompatActivity {
                             public void onCodeSent(@NonNull String s, @NonNull PhoneAuthProvider.ForceResendingToken forceResendingToken) {
                                 super.onCodeSent(s, forceResendingToken);
                                 Toast.makeText(MainActivity.this, "Code Sent", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(MainActivity.this, OtpActivity.class);
+                                startActivity(intent);
                             }
                         })          // OnVerificationStateChangedCallbacks
                         .build();
@@ -153,6 +152,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 PhoneAuthProvider.verifyPhoneNumber(options);
+//                Intent intent = new Intent(MainActivity.this, OtpActivity.class);
+//                startActivity(intent);
             }
         });
 
