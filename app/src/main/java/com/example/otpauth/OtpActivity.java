@@ -1,6 +1,7 @@
 package com.example.otpauth;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -29,23 +30,27 @@ import com.google.android.gms.tasks.Task;
 public class OtpActivity extends AppCompatActivity {
 
     private TextView tvOtp;
+    private String phoneNum = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_otp);
         tvOtp = findViewById(R.id.tvOtp);
+        phoneNum = getIntent().getStringExtra("PH");
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
             // Permission not granted, request it.
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_SMS}, 3);
         } else {
-            // Permission is already granted, continue with your logic.
-            // You can start listening for SMS or initiate the SMS retrieval process.
+
         }
-//        mAuth = FirebaseAuth.getInstance();
+        PackageManager packageManager = getPackageManager();
+        boolean isSmsRetrieverSupported = packageManager.hasSystemFeature("android.hardware.telephony.sms.consent");
+        Toast.makeText(this, ""+ isSmsRetrieverSupported, Toast.LENGTH_SHORT).show();
         IntentFilter intentFilter = new IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION);
         registerReceiver(smsVerificationReceiver, intentFilter);
-        Task<Void> task = SmsRetriever.getClient(OtpActivity.this).startSmsUserConsent(null);
+        Task<Void> task = SmsRetriever.getClient(OtpActivity.this).startSmsUserConsent("+919510324299");
+
         task.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
@@ -67,17 +72,11 @@ public class OtpActivity extends AppCompatActivity {
         public void onActivityResult(ActivityResult result) {
             if (result.getResultCode() == RESULT_OK) {
                 // Get SMS message content
-                // Log.d(TAG, "onActivityResult: ");
                 String message = result.getData().getStringExtra(SmsRetriever.EXTRA_SMS_MESSAGE);
                 String otp = message.substring(0, 6);
                 tvOtp.setText(otp);
                 unregisterReceiver(smsVerificationReceiver);
                 // Extract one-time code from the message and complete verification
-                // `sms` contains the entire text of the SMS message, so you will need
-                // to parse the string.
-                // String oneTimeCode = parseOneTimeCode(message); // define this function
-
-                // send one time code to the server
             } else {
                 String message = result.getData().getStringExtra(SmsRetriever.EXTRA_SMS_MESSAGE);
             }
@@ -90,26 +89,32 @@ public class OtpActivity extends AppCompatActivity {
             if (isValidMessageArrived) return;
             if (SmsRetriever.SMS_RETRIEVED_ACTION.equals(intent.getAction())) {
                 Bundle extras = intent.getExtras();
-                Status smsRetrieverStatus = (Status) extras.get(SmsRetriever.EXTRA_STATUS);
+                if (extras != null) {
+                    Status smsRetrieverStatus = (Status) extras.get(SmsRetriever.EXTRA_STATUS);
+                    if (smsRetrieverStatus != null) {
+                        switch (smsRetrieverStatus.getStatusCode()) {
+                            case CommonStatusCodes.SUCCESS:
+                                // Get consent intent
+                                isValidMessageArrived = true;
+                                Intent consentIntent = extras.getParcelable(SmsRetriever.EXTRA_CONSENT_INTENT);
+                                try {
+                                    requestActivityLauncher.launch(consentIntent);
+                                } catch (ActivityNotFoundException e) {
+                                }
+                                break;
+                            case CommonStatusCodes.TIMEOUT:
+                                isValidMessageArrived = false;
+                                Toast.makeText(context, "in Receiver timeout", Toast.LENGTH_SHORT).show();
+                                break;
+                        }
+                    } else {
+                        Toast.makeText(context, "smsRetrieverStatus null", Toast.LENGTH_SHORT).show();
+                    }
 
-                switch (smsRetrieverStatus.getStatusCode()) {
-                    case CommonStatusCodes.SUCCESS:
-                        // Get consent intent
-                        isValidMessageArrived = true;
-                        Intent consentIntent = extras.getParcelable(SmsRetriever.EXTRA_CONSENT_INTENT);
-//                        try {
-//                            // Start activity to show consent dialog to user, activity must be started in
-//                            // 5 minutes, otherwise you'll receive another TIMEOUT intent
-                        requestActivityLauncher.launch(consentIntent);
-//                        } catch (ActivityNotFoundException e) {
-//                            // Handle the exception ...
-//                        }
-                        break;
-                    case CommonStatusCodes.TIMEOUT:
-                        isValidMessageArrived = false;
-                        Toast.makeText(context, "in Receiver timeout", Toast.LENGTH_SHORT).show();
-                        break;
+                } else {
+                    Toast.makeText(context, "extras null", Toast.LENGTH_SHORT).show();
                 }
+
             }
         }
     };
